@@ -1,63 +1,99 @@
-import { PrismaClient } from '@prisma/client';
-import { hash } from 'bcryptjs';
+import { PrismaClient } from "@prisma/client";
+import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Create a dummy user
-  const hashedPassword = await hash('password123', 10);
-  const user = await prisma.user.upsert({
-    where: { email: 'test@example.com' },
-    update: {},
-    create: {
-      clerkId: 'user_2aBcDeFgHiJkLmNoPqRsTuVwXyZ',
-      email: 'test@example.com',
-      name: 'Test User',
-    },
-  });
-  console.log({ user });
+  // Clear existing data
+  await prisma.product.deleteMany();
+  await prisma.cart.deleteMany();
+  await prisma.user.deleteMany();
 
-  // Create some dummy products
-  const product1 = await prisma.product.upsert({
-    where: { id: 'prod_1' },
-    update: {},
-    create: {
-      id: 'prod_1',
-      name: 'Stylish T-Shirt',
-      description: 'A comfortable and stylish cotton t-shirt.',
-      imageUrl: '/products/tshirt.webp',
-      price: 25.99,
-      userId: user.id,
+  // Create sample users (hashed passwords are not used with Clerk)
+  const user1 = await prisma.user.create({
+    data: {
+      id: "user_clerk_1", // Clerk user ID
+      clerkId: "user_clerk_1",
+      email: "user1@example.com",
     },
   });
 
-  const product2 = await prisma.product.upsert({
-    where: { id: 'prod_2' },
-    update: {},
-    create: {
-      id: 'prod_2',
-      name: 'Denim Jeans',
-      description: 'Classic fit denim jeans for everyday wear.',
-      imageUrl: '/products/jeans.webp',
-      price: 59.99,
-      userId: user.id,
+  const user2 = await prisma.user.create({
+    data: {
+      id: "user_clerk_2", // Clerk user ID
+      clerkId: "user_clerk_2",
+      email: "user2@example.com",
     },
   });
 
-  const product3 = await prisma.product.upsert({
-    where: { id: 'prod_3' },
-    update: {},
-    create: {
-      id: 'prod_3',
-      name: 'Leather Wallet',
-      description: 'A sleek leather wallet with multiple card slots.',
-      imageUrl: '/products/wallet.webp',
-      price: 35.00,
-      userId: user.id,
+  // Create sample products
+  const product1 = await prisma.product.create({
+    data: {
+      name: "Laptop Pro",
+      description: "A powerful laptop for professionals.",
+      imageUrl: "https://utfs.io/f/75c3b956-5c1c-486e-951c-826e35c28014-laptop.png",
+      price: 1200.00,
+      stock: 10,
+      userId: user1.id,
     },
   });
 
-  console.log({ product1, product2, product3 });
+  const product2 = await prisma.product.create({
+    data: {
+      name: "Wireless Mouse",
+      description: "Ergonomic and responsive wireless mouse.",
+      imageUrl: "https://utfs.io/f/21f7e35a-c5b2-41b1-85a5-f4674c39b79c-mouse.png",
+      price: 25.50,
+      stock: 50,
+      userId: user1.id,
+    },
+  });
+
+  const product3 = await prisma.product.create({
+    data: {
+      name: "Mechanical Keyboard",
+      description: "Clicky and satisfying mechanical keyboard.",
+      imageUrl: "https://utfs.io/f/42d12345-6789-0abc-def0-1234567890ab-keyboard.png",
+      price: 75.00,
+      stock: 20,
+      userId: user2.id,
+    },
+  });
+
+  // Create sample carts
+  const cart1 = await prisma.cart.create({
+    data: {
+      userId: user1.id,
+      items: {
+        create: [
+          {
+            productId: product1.id,
+            quantity: 1,
+          },
+          {
+            productId: product2.id,
+            quantity: 2,
+          },
+        ],
+      },
+    },
+  });
+
+  const cart2 = await prisma.cart.create({
+    data: {
+      userId: user2.id,
+      items: {
+        create: [
+          {
+            productId: product3.id,
+            quantity: 1,
+          },
+        ],
+      },
+    },
+  });
+
+  console.log("Seeding complete.");
 }
 
 main()

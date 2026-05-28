@@ -1,86 +1,113 @@
-'use client';
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState } from "react";
 
 interface ProductFormProps {
-  onSubmit: (formData: FormData) => Promise<any>;
+  onSubmit: (data: FormData) => Promise<void>;
   initialData?: {
     name: string;
-    description?: string | null;
-    imageUrl: string;
+    description: string;
     price: number;
+    imageUrl: string;
+    stock: number;
   };
 }
 
 export default function ProductForm({ onSubmit, initialData }: ProductFormProps) {
-  const router = useRouter();
-  const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const [name, setName] = useState(initialData?.name || "");
+  const [description, setDescription] = useState(initialData?.description || "");
+  const [price, setPrice] = useState(initialData?.price?.toString() || "");
+  const [imageUrl, setImageUrl] = useState(initialData?.imageUrl || "");
+  const [stock, setStock] = useState(initialData?.stock?.toString() || "");
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const result = await onSubmit(formData);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("description", description);
+    formData.append("price", price);
+    formData.append("imageUrl", imageUrl);
+    formData.append("stock", stock);
 
-    if (result?.errors) {
-      setErrors(result.errors);
-    } else {
-      router.push('/admin/products');
+    try {
+      await onSubmit(formData);
+    } catch (error) {
+      console.error("Failed to submit product:", error);
+      // Handle error display to user
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+          Product Name
+        </label>
         <input
           type="text"
           id="name"
-          name="name"
-          defaultValue={initialData?.name || ''}
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           required
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
         />
-        {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name[0]}</p>}
       </div>
       <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+        <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+          Description
+        </label>
         <textarea
           id="description"
-          name="description"
-          defaultValue={initialData?.description || ''}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          required
           rows={3}
           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-        />
-        {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description[0]}</p>}
+        ></textarea>
       </div>
       <div>
-        <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700">Image URL</label>
-        <input
-          type="url"
-          id="imageUrl"
-          name="imageUrl"
-          defaultValue={initialData?.imageUrl || ''}
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-          required
-        />
-        {errors.imageUrl && <p className="text-red-500 text-sm mt-1">{errors.imageUrl[0]}</p>}
-      </div>
-      <div>
-        <label htmlFor="price" className="block text-sm font-medium text-gray-700">Price</label>
+        <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+          Price (USD)
+        </label>
         <input
           type="number"
           id="price"
-          name="price"
-          defaultValue={initialData?.price || ''}
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          required
           step="0.01"
           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-          required
         />
-        {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price[0]}</p>}
       </div>
-      <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-        Save Product
+      <div>
+        <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700">
+          Image URL
+        </label>
+        <input
+          type="text"
+          id="imageUrl"
+          value={imageUrl}
+          onChange={(e) => setImageUrl(e.target.value)}
+          required
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+        />
+      </div>
+      <div>
+        <label htmlFor="stock" className="block text-sm font-medium text-gray-700">
+          Stock Quantity
+        </label>
+        <input
+          type="number"
+          id="stock"
+          value={stock}
+          onChange={(e) => setStock(e.target.value)}
+          required
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+        />
+      </div>
+      <button
+        type="submit"
+        className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+      >
+        {initialData ? "Update Product" : "Add Product"}
       </button>
     </form>
   );

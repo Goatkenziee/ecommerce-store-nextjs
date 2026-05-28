@@ -1,27 +1,29 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
-import Header from "@/components/Header";
+import { ShoppingCartProvider } from "@/lib/useShoppingCart";
+import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
 
 export const metadata: Metadata = {
   title: "E-commerce Store",
-  description: "A full-stack e-commerce store built with Next.js, Clerk, Prisma, and Stripe.",
+  description: "Your one-stop shop for everything!",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={inter.className}>
-          <Header />
-          <main>{children}</main>
+        <body className={`${inter.variable} font-sans`}>
+          <ShoppingCartProvider>{children}</ShoppingCartProvider>
         </body>
       </html>
     </ClerkProvider>
